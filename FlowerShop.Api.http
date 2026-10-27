@@ -1,0 +1,80 @@
+### File thử API: mở bằng VS Code (extension "REST Client"), Visual Studio hoặc Rider rồi bấm "Send Request".
+### Có thể thử bằng Swagger UI tại http://localhost:5080/swagger
+
+@host = http://localhost:5080
+
+### GET danh mục
+GET {{host}}/api/categories
+
+### GET danh sách sản phẩm (có thể lọc: category, search, featured)
+GET {{host}}/api/products?category=hoa-bo&search=hồng
+
+### GET một sản phẩm
+GET {{host}}/api/products/1
+
+### POST thêm sản phẩm (trả 201 Created)
+POST {{host}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Bó cúc họa mi",
+  "categoryId": 1,
+  "price": 320000,
+  "stock": 10,
+  "flowers": "Cúc họa mi, lá bạc",
+  "description": "Bó hoa nhỏ xinh cho ngày bình yên.",
+  "petalColor": "#f5f5f0",
+  "featured": false
+}
+
+### PUT sửa sản phẩm (gửi đủ các trường; đổi id 9 thành id của sản phẩm vừa tạo)
+PUT {{host}}/api/products/9
+Content-Type: application/json
+
+{
+  "name": "Bó cúc họa mi",
+  "categoryId": 1,
+  "price": 350000,
+  "stock": 8,
+  "flowers": "Cúc họa mi, lá bạc",
+  "description": "Bó hoa nhỏ xinh cho ngày bình yên.",
+  "petalColor": "#f5f5f0",
+  "featured": true
+}
+
+### DELETE xóa sản phẩm (trả 204; 409 nếu sản phẩm đã nằm trong đơn)
+DELETE {{host}}/api/products/9
+
+### GET danh sách đơn (lọc theo trạng thái: New, Preparing, Delivering, Completed, Cancelled)
+GET {{host}}/api/orders?status=New
+
+### GET một đơn
+GET {{host}}/api/orders/7
+
+### POST đặt hoa (đổi deliveryDate sang ngày từ hôm nay trở đi)
+POST {{host}}/api/orders
+Content-Type: application/json
+
+{
+  "customerName": "Khách thử API",
+  "phone": "0900 000 000",
+  "address": "1 Đường Thử Nghiệm, Quận 1",
+  "deliveryDate": "2026-12-01",
+  "deliverySlot": "10:00 – 12:00",
+  "message": "Chúc mừng sinh nhật!",
+  "items": [ { "productId": 1, "quantity": 2 } ]
+}
+
+### PUT đổi trạng thái đơn (gửi đủ địa chỉ, ngày và khung giờ giao hiện tại)
+PUT {{host}}/api/orders/7
+Content-Type: application/json
+
+{
+  "status": "Preparing",
+  "address": "21 Nguyễn Du, Quận 1",
+  "deliveryDate": "2026-10-27",
+  "deliverySlot": "15:00 – 17:00"
+}
+
+### DELETE xóa đơn (chỉ xóa được đơn đã hủy, ví dụ đơn id 2)
+DELETE {{host}}/api/orders/2
