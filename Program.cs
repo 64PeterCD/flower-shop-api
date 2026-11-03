@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
 using FlowerShop.Api.Data;
+using FlowerShop.Api.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +20,32 @@ builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 
-// 4. CORS: cho phép front-end (React/Vite) ở địa chỉ khác gọi API từ trình duyệt.
+// 4. Xác thực bằng JWT (Authorization: Bearer <token>) và phân quyền theo vai trò.
+//    Cấu hình JWT đọc lười (lúc có request đầu tiên) để các lệnh `dotnet ef` vẫn chạy khi chưa đặt Jwt:Key.
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IConfiguration>((options, config) =>
+    {
+        var jwt = JwtSettings.From(config);
+        options.MapInboundClaims = false; // giữ nguyên tên claim ngắn: "sub", "email", "role"
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwt.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwt.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = jwt.SigningKey,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            RoleClaimType = TokenService.RoleClaim,
+            NameClaimType = "email",
+        };
+    });
+builder.Services.AddAuthorization();
+
+// 5. CORS: cho phép front-end (React/Vite) ở địa chỉ khác gọi API từ trình duyệt.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
     options.AddPolicy("Frontend", policy => policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
@@ -32,6 +60,7 @@ if (app.Environment.IsDevelopment())
 
 // Không dùng UseHttpsRedirection ở bản thực hành: front-end gọi http://localhost nên redirect sang https sẽ làm hỏng CORS.
 app.UseCors("Frontend");
+app.UseAuthentication(); // đọc token -> biết "ai đang gọi"; phải đứng trước UseAuthorization
 app.UseAuthorization();
 app.MapControllers();
 

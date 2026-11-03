@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using FlowerShop.Api.Data;
 using FlowerShop.Api.Dtos;
 using FlowerShop.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +16,8 @@ public partial class OrdersController(AppDbContext db) : ControllerBase
     [GeneratedRegex(@"^(0|\+84)\d{9}$")]
     private static partial Regex PhonePattern();
 
-    /// <summary>GET /api/orders?status=New — danh sách đơn, mới nhất trước.</summary>
+    /// <summary>GET /api/orders?status=New — danh sách đơn, mới nhất trước. Chỉ Admin.</summary>
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpGet]
     public async Task<ActionResult<List<OrderDto>>> GetAll([FromQuery] OrderStatus? status)
     {
@@ -28,7 +30,8 @@ public partial class OrdersController(AppDbContext db) : ControllerBase
         return orders.Select(OrderDto.From).ToList();
     }
 
-    /// <summary>GET /api/orders/{id} — chi tiết một đơn.</summary>
+    /// <summary>GET /api/orders/{id} — chi tiết một đơn. Chỉ Admin.</summary>
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<OrderDto>> GetById(int id)
     {
@@ -39,7 +42,7 @@ public partial class OrdersController(AppDbContext db) : ControllerBase
         return order is null ? OrderNotFound(id) : OrderDto.From(order);
     }
 
-    /// <summary>POST /api/orders — khách đặt hoa: kiểm tra dữ liệu, trừ tồn kho và lưu đơn trong một transaction.</summary>
+    /// <summary>POST /api/orders — khách đặt hoa (không cần đăng nhập): kiểm tra dữ liệu, trừ tồn kho và lưu đơn trong một transaction.</summary>
     [HttpPost]
     public async Task<ActionResult<OrderDto>> Create(CreateOrderRequest request)
     {
@@ -101,7 +104,8 @@ public partial class OrdersController(AppDbContext db) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = order.Id }, OrderDto.From(order));
     }
 
-    /// <summary>PUT /api/orders/{id} — đổi trạng thái / địa chỉ / lịch giao. Đơn đã hoàn thành hoặc đã hủy thì không sửa nữa.</summary>
+    /// <summary>PUT /api/orders/{id} — đổi trạng thái / địa chỉ / lịch giao. Đơn đã hoàn thành hoặc đã hủy thì không sửa nữa. Chỉ Admin.</summary>
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<OrderDto>> Update(int id, UpdateOrderRequest request)
     {
@@ -147,7 +151,8 @@ public partial class OrdersController(AppDbContext db) : ControllerBase
         return OrderDto.From(order);
     }
 
-    /// <summary>DELETE /api/orders/{id} — chỉ xóa được đơn đã hủy, trả 204 No Content.</summary>
+    /// <summary>DELETE /api/orders/{id} — chỉ xóa được đơn đã hủy, trả 204 No Content. Chỉ Admin.</summary>
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

@@ -1,7 +1,36 @@
 ### File thử API: mở bằng VS Code (extension "REST Client"), Visual Studio hoặc Rider rồi bấm "Send Request".
-### Có thể thử bằng Swagger UI tại http://localhost:5080/swagger
+### Có thể thử bằng Swagger UI tại http://localhost:5080/swagger (Swagger UI chưa có ô nhập token nên endpoint cần đăng nhập hãy thử ở file này).
 
 @host = http://localhost:5080
+
+### Các request cần quyền Admin dùng biến @token: chạy "đăng nhập" bên dưới rồi dán giá trị "token" của phản hồi vào đây.
+@token = DAN_TOKEN_O_DAY
+
+### ---------- ĐĂNG KÝ / ĐĂNG NHẬP ----------
+
+### POST đăng ký (201 + token; 400 nếu sai dữ liệu; 409 nếu email đã có)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "ban@example.com",
+  "password": "MatKhau123"
+}
+
+### POST đăng nhập (200 + token; 401 nếu sai email hoặc mật khẩu)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ban@example.com",
+  "password": "MatKhau123"
+}
+
+### GET thông tin người đang đăng nhập (401 nếu thiếu / sai token)
+GET {{host}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### ---------- DANH MỤC, SẢN PHẨM ----------
 
 ### GET danh mục
 GET {{host}}/api/categories
@@ -12,8 +41,9 @@ GET {{host}}/api/products?category=hoa-bo&search=hồng
 ### GET một sản phẩm
 GET {{host}}/api/products/1
 
-### POST thêm sản phẩm (trả 201 Created)
+### POST thêm sản phẩm (Admin; 201 Created)
 POST {{host}}/api/products
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -27,8 +57,9 @@ Content-Type: application/json
   "featured": false
 }
 
-### PUT sửa sản phẩm (gửi đủ các trường; đổi id 9 thành id của sản phẩm vừa tạo)
+### PUT sửa sản phẩm (Admin; gửi đủ các trường; đổi id 9 thành id của sản phẩm vừa tạo)
 PUT {{host}}/api/products/9
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -42,16 +73,13 @@ Content-Type: application/json
   "featured": true
 }
 
-### DELETE xóa sản phẩm (trả 204; 409 nếu sản phẩm đã nằm trong đơn)
+### DELETE xóa sản phẩm (Admin; 204; 409 nếu sản phẩm đã nằm trong đơn)
 DELETE {{host}}/api/products/9
+Authorization: Bearer {{token}}
 
-### GET danh sách đơn (lọc theo trạng thái: New, Preparing, Delivering, Completed, Cancelled)
-GET {{host}}/api/orders?status=New
+### ---------- ĐƠN HÀNG ----------
 
-### GET một đơn
-GET {{host}}/api/orders/7
-
-### POST đặt hoa (đổi deliveryDate sang ngày từ hôm nay trở đi)
+### POST đặt hoa (ai cũng gọi được; đổi deliveryDate sang ngày từ hôm nay trở đi)
 POST {{host}}/api/orders
 Content-Type: application/json
 
@@ -65,8 +93,17 @@ Content-Type: application/json
   "items": [ { "productId": 1, "quantity": 2 } ]
 }
 
-### PUT đổi trạng thái đơn (gửi đủ địa chỉ, ngày và khung giờ giao hiện tại)
+### GET danh sách đơn (Admin; lọc theo trạng thái: New, Preparing, Delivering, Completed, Cancelled)
+GET {{host}}/api/orders?status=New
+Authorization: Bearer {{token}}
+
+### GET một đơn (Admin)
+GET {{host}}/api/orders/7
+Authorization: Bearer {{token}}
+
+### PUT đổi trạng thái đơn (Admin; gửi đủ địa chỉ, ngày và khung giờ giao hiện tại)
 PUT {{host}}/api/orders/7
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -76,5 +113,6 @@ Content-Type: application/json
   "deliverySlot": "15:00 – 17:00"
 }
 
-### DELETE xóa đơn (chỉ xóa được đơn đã hủy, ví dụ đơn id 2)
+### DELETE xóa đơn (Admin; chỉ xóa được đơn đã hủy, ví dụ đơn id 2)
 DELETE {{host}}/api/orders/2
+Authorization: Bearer {{token}}

@@ -1,6 +1,7 @@
 using FlowerShop.Api.Data;
 using FlowerShop.Api.Dtos;
 using FlowerShop.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,7 +41,8 @@ public class ProductsController(AppDbContext db) : ControllerBase
         return product is null ? ProductNotFound(id) : ProductDto.From(product);
     }
 
-    /// <summary>POST /api/products — thêm sản phẩm mới, trả 201 Created.</summary>
+    /// <summary>POST /api/products — thêm sản phẩm mới, trả 201 Created. Chỉ Admin.</summary>
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpPost]
     public async Task<ActionResult<ProductDto>> Create(ProductRequest request)
     {
@@ -56,7 +58,8 @@ public class ProductsController(AppDbContext db) : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, ProductDto.From(product));
     }
 
-    /// <summary>PUT /api/products/{id} — thay toàn bộ thông tin sản phẩm.</summary>
+    /// <summary>PUT /api/products/{id} — thay toàn bộ thông tin sản phẩm. Chỉ Admin.</summary>
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<ProductDto>> Update(int id, ProductRequest request)
     {
@@ -74,7 +77,8 @@ public class ProductsController(AppDbContext db) : ControllerBase
         return ProductDto.From(product);
     }
 
-    /// <summary>DELETE /api/products/{id} — xóa sản phẩm chưa từng được đặt, trả 204 No Content.</summary>
+    /// <summary>DELETE /api/products/{id} — xóa sản phẩm chưa từng được đặt, trả 204 No Content. Chỉ Admin.</summary>
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

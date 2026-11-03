@@ -13,6 +13,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
+    public DbSet<User> Users => Set<User>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>
@@ -71,6 +73,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany()
                 .HasForeignKey(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.Property(u => u.Email).HasMaxLength(254);
+            entity.Property(u => u.PasswordHash).HasMaxLength(200);
+            entity.Property(u => u.Role).HasMaxLength(20);
+
+            // Mỗi email chỉ có một tài khoản (email đã được chuẩn hóa về chữ thường trước khi lưu).
+            entity.HasIndex(u => u.Email).IsUnique();
         });
 
         SeedData.Apply(modelBuilder);
